@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>SKOOLER</title>
+	<style>
+		body {
+			background-color: #00004d;
+		}
+		header {
+			color: #ffff99;
+			text-align: center;
+			font-size: 72px;
+			font-family: helvetica;
+			font-weight: bold;
+			padding: 12px;
+		}
+		canvas {
+			background-color: #000066;
+			display: block;
+			margin: auto;
+			position: absolute;
+			bottom: 45px;
+			right: 215px;
+		}
+		div {
+			background-color: #ffff99;
+			height: 45px;
+			width: 100%;
+			position: absolute;
+			right: 0;
+			bottom: 0;
+			z-index: 0;
+		}
+		#directions {
+			background-color: #00004d;
+			color: #ffff99;
+			font-size: 20px;
+			font-family: helvetica;
+			font-weight: bold;
+			position: absolute;
+			right: 15px;
+			top: 150px;
+		}
+		#counter {
+			background-color: #00004d;
+			color: #ffff99;
+			font-size: 28px;
+			font-family: helvetica;
+			font-weight: bold;
+			position: absolute;
+			left: 20px;
+			top: 180px;
+		}
+	</style>
+	<link rel="icon" href="http://www.pngmart.com/files/3/School-of-Fish-PNG-Photos.png">
+</head>
+<body>
+	<header>SKOOLER</header>
+	<img src="seaweed.png" style="width: 200px;height: 600px;position: absolute;bottom: 0;z-index: 5;">
+	<img src="seaweed.png" style="width: 200px;height: 600px;position: absolute;bottom: 0;right: 0;z-index: 5;">
+	<div id="sand"></div>
+	<p id="directions">USE ARROW<br>KEYS TO MOVE.<br>AVOID GREEN<br>WHILE CATCHING<br>YELLOW.</h1>
+	<p id="counter">SCORE: 10</p>
+	<canvas id="canvas" width="1500" height="800"></canvas>
+	<script>
+		var canvas = document.getElementById("canvas");
+		var c = canvas.getContext("2d");
+		
+		var hero_x = 1200;
+		var hero_y = 400;
+		var heroR = 10;
+		
+		var yellowSeeking_x = [];
+		var yellowSeeking_y = [];
+		var yellowRunning_x = [];
+		var yellowRunning_y = [];
+		var greenSeeking_x = [];
+		var greenSeeking_y = [];
+		var greenRunning_x = [];
+		var greenRunning_y = [];
+		
+		function sleep(milliseconds) {
+		    var start = new Date().getTime();
+		    for (var i = 0; i < 1e7; i++) {
+				if ((new Date().getTime() - start) > milliseconds){
+					break;
+			}
+		  }
+		};
+		
+		function whichKey(e){
+			var key = e.keyCode;
+			console.log(key);
+			if (key === 37){
+				hero_x += -15;
+				console.log(key);
+			} else if (key === 39){
+				hero_x += 15;
+			};
+			if (key === 40){
+				hero_y += 15;
+			} else if (key === 38){
+				hero_y += -15;
+			};
+		};
+		
+		window.addEventListener("keydown", whichKey);
+		window.addEventListener("keydown", whichKey);	
+	
+		function listen(){			
+			if (hero_x > 1500-heroR){
+				hero_x = 1500-heroR;
+			} else if (hero_x < 0+heroR){
+				hero_x = 0+heroR;
+			};
+			
+			if (hero_y > 800-heroR){
+				hero_y = 800-heroR;
+			} else if (hero_y < 0+heroR){
+				hero_y = 0+heroR;
+			};
+		};
+		
+		function spawn(){
+			// alert('"spawned"')
+			var whichType = Math.floor(Math.random()*4);
+			
+			var add_x = 0;
+			var add_y = Math.floor(Math.random()*800);
+			console.log(add_y);
+			
+			if (whichType == 1){
+				yellowSeeking_x.push(add_x);
+				yellowSeeking_y.push(add_y);
+			} else if (whichType == 2){
+				yellowRunning_x.push(add_x);
+				yellowRunning_y.push(add_y);
+			} else if (whichType == 0 || whichType == 4){
+				greenSeeking_x.push(add_x);
+				greenSeeking_y.push(add_y);			
+			} else {
+				greenRunning_x.push(add_x);
+				greenRunning_y.push(add_y);	
+			};
+		};
+		
+		function refresh(){		
+			listen();
+			
+			c.fillStyle = "#000066";
+			
+			c.fillRect(0,0,1500,800);
+			c.beginPath();
+			c.arc(hero_x, hero_y, heroR, 0, 360);
+			c.fillStyle = "#FF9900";
+			c.fill();
+			
+			var newYellowSeeking_x = [];
+			var newYellowSeeking_y = [];
+			var newYellowRunning_x = [];
+			var newYellowRunning_y = [];
+			var newGreenSeeking_x = [];
+			var newGreenSeeking_y = [];
+			var newGreenRunning_x = [];
+			var newGreenRunning_y = [];
+			
+			var loc = 0;
+			for (loc = 0; loc < yellowSeeking_x.length; loc++) { 
+				var enemy_x = yellowSeeking_x[loc];
+				var enemy_y = yellowSeeking_y[loc];
+				
+				var diff_x = Math.abs(hero_x - enemy_x);
+				var diff_y = Math.abs(hero_y - enemy_y);
+				var diff = Math.sqrt((diff_x*diff_x) + (diff_y*diff_y));
+				
+				if (diff < heroR + 10){
+					heroR += 5;
+				} else if (enemy_x < 1500 && enemy_y < 800){
+					c.beginPath();
+					c.arc(enemy_x, enemy_y, 10, 0, 360);
+					c.fillStyle = "#ffff00";
+					c.fill();
+					 
+					enemy_x += 5
+					if(Math.random > .75){
+						enemy_x += 2
+					};
+					if(Math.random() > 0.75 && enemy_y > hero_y){
+						enemy_y += -4
+					} else if (Math.random() > 0.75 && enemy_y < hero_y){
+						enemy_y += 4
+					};
+					
+					newYellowSeeking_x.push(enemy_x);
+					newYellowSeeking_y.push(enemy_y);
+				};
+			};
+			
+			loc = 0;
+			for (loc = 0; loc < yellowRunning_x.length; loc++) { 
+				var enemy_x = yellowRunning_x[loc];
+				var enemy_y = yellowRunning_y[loc];
+				
+				var diff_x = Math.abs(hero_x - enemy_x);
+				var diff_y = Math.abs(hero_y - enemy_y);
+				var diff = Math.sqrt((diff_x*diff_x) + (diff_y*diff_y));
+				
+				if (diff < heroR + 10){
+					heroR += 5;
+				} else if (enemy_x < 1500 && enemy_y < 800){
+					c.beginPath();
+					c.arc(enemy_x, enemy_y, 10, 0, 360);
+					c.fillStyle = "#ffff00";
+					c.fill();
+					
+					enemy_x += 5
+					if(Math.random > .75){
+						enemy_x += 2
+					};
+					if(Math.random() > 0.75 && enemy_y > hero_y){
+						enemy_y += 4
+					} else if (Math.random() > 0.75 && enemy_y < hero_y){
+						enemy_y += -4
+					};
+					
+					newYellowRunning_x.push(enemy_x);
+					newYellowRunning_y.push(enemy_y);
+				};
+			};
+			
+			loc = 0;
+			for (loc = 0; loc < greenSeeking_x.length; loc++) { 
+				var enemy_x = greenSeeking_x[loc];
+				var enemy_y = greenSeeking_y[loc];
+				
+				var diff_x = Math.abs(hero_x - enemy_x);
+				var diff_y = Math.abs(hero_y - enemy_y);
+				var diff = Math.sqrt((diff_x*diff_x) + (diff_y*diff_y));
+				
+				if (diff < heroR + 10){
+					heroR += -5;
+				} else if (enemy_x < 1500 && enemy_y < 800){
+					c.beginPath();
+					c.arc(enemy_x, enemy_y, 10, 0, 360);
+					c.fillStyle = "#00e600";
+					c.fill();
+					
+					enemy_x += 5
+					if(Math.random > .25){
+						enemy_x += 2
+					};
+					if(Math.random() > 0.75 && enemy_y > hero_y){
+						enemy_y += -5
+					} else if (Math.random() > 0.75 && enemy_y < hero_y){
+						enemy_y += 5
+					};
+					
+					newGreenSeeking_x.push(enemy_x);
+					newGreenSeeking_y.push(enemy_y);
+				};
+			};
+			
+			loc = 0;
+			for (loc = 0; loc < greenRunning_x.length; loc++) { 
+				var enemy_x = greenRunning_x[loc];
+				var enemy_y = greenRunning_y[loc];
+				
+				var diff_x = Math.abs(hero_x - enemy_x);
+				var diff_y = Math.abs(hero_y - enemy_y);
+				var diff = Math.sqrt((diff_x*diff_x) + (diff_y*diff_y));
+				
+				if (diff < heroR + 10){
+					heroR += -5;
+				} else if (enemy_x < 1500 && enemy_y < 800){
+					c.beginPath();
+					c.arc(enemy_x, enemy_y, 10, 0, 360);
+					c.fillStyle = "#00e600";
+					c.fill();
+					
+					enemy_x += 5
+					if(Math.random > .25){
+						enemy_x += 2
+					};
+					if(Math.random() > 0.75 && enemy_y > hero_y){
+						enemy_y += 5
+					} else if (Math.random() > 0.75 && enemy_y < hero_y){
+						enemy_y += -5
+					};
+					
+					newGreenRunning_x.push(enemy_x);
+					newGreenRunning_y.push(enemy_y);
+				};
+			};
+			
+			yellowSeeking_x = newYellowSeeking_x;
+			yellowSeeking_y = newYellowSeeking_y;
+			yellowRunning_x = newYellowRunning_x;
+			yellowRunning_y = newYellowRunning_y;
+			greenSeeking_x = newGreenSeeking_x;
+			greenSeeking_y = newGreenSeeking_y;
+			greenRunning_x = newGreenRunning_x;
+			greenRunning_y = newGreenRunning_y;
+			
+			// DO FOR LOOPS FOR EACH TYPE AND DRAW ALL
+			// REMEMBER TO MOVE THEM AND DISCONTINUE IF THEY TOUCH HERO OR EDGE
+			
+			if (heroR < 5) {
+				location.reload();
+			};
+			
+			document.getElementById("counter").innerHTML = "SCORE: " + heroR.toString();
+		};
+		
+		refresh();
+		setInterval("refresh()", 10);
+		
+		spawn();
+		setInterval("spawn()", 250);
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	</script>
+</body>
+</html>
